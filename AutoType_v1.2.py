@@ -26,7 +26,7 @@ s.insert(0,5)
 spd=Label(root,text="Set typing speed (1-10)",font=("Open Sans", 14),bg="#ffffff").pack()
 
 
-x=Scale(root, from_=0,to=10,orient="horizontal",length=300,bg="#ffffff",width=20,sliderlength=50, troughcolor='#aed5f2')
+x=Scale(root, from_=1,to=10,orient="horizontal",length=300,bg="#ffffff",width=20,sliderlength=50, troughcolor='#aed5f2')
 x.set(10)
 x.pack(pady=10)
 
