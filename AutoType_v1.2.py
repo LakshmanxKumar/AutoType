@@ -4,14 +4,14 @@ import time
 from tkinter import *
 
 root=Tk()  
-root.geometry("700x830+155+60") 
+root.geometry("700x832+155+60") 
 root.title("Auto Type")  
 root.minsize(700,800)
 root.config(bg="#ffffff")
 start_after=Label(root,text="Enter text you want to AutoType",
                   font=("Open sans", 18,),
                     bg="#FFFFFF")
-start_after.pack(side=TOP ,pady=15)
+start_after.pack(side=TOP ,pady=12)
 
 e = Text(root, width=85,height=12, bg="#e0e0e0", font=("Open Sans", 14))
 e.pack(pady=10)
@@ -52,12 +52,22 @@ def shift_line_to_left(s):
     e.delete(1.0, END)
     e.insert(1.0, ans)
 
-leftShift= Button(root,text="Remove indentation",font=("Open Sans", 14,),bg="#F0F0F0",border=0,command=lambda:shift_line_to_left(e.get(1.0,END)))
-leftShift.pack(side=TOP,pady=10)
+def pointerInside(e):
+    e.widget['background']="#d4d7d9"
+def pointerOutside(e):
+    e.widget['background']="#F0F0F0"
 
-start_typing=Button(root,text="Start AutoTyping",width=50,font=("Arial", 16,"bold"),
+
+leftShift= Button(root,text="Remove indentation",activebackground="#F0F0F0",font=("Open Sans", 14,),bg="#F0F0F0",border=0,command=lambda:shift_line_to_left(e.get(1.0,END)))
+leftShift.pack(side=TOP,pady=10)
+leftShift.bind("<Enter>",pointerInside)
+leftShift.bind("<Leave>",pointerOutside)
+
+start_typing=Button(root,text="Start AutoTyping",activebackground="#F0F0F0",width=50,font=("Arial", 16,"bold"),
                     border=0,bg="#F0F0F0",command=lambda:typei(s.get(),x.get()))
 
 start_typing.pack(side=TOP,padx=10,pady=10)
+start_typing.bind("<Enter>",pointerInside)
+start_typing.bind("<Leave>",pointerOutside)
 
 root.mainloop()
