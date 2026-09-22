@@ -85,15 +85,27 @@ speed_row = Frame(settings_inner, bg=CARD)
 speed_row.pack(fill="x")
 Label(speed_row, text="Typing speed", font=("Segoe UI", 11), bg=CARD, fg=TEXT_COLOR).pack(anchor="w")
 
-x = Scale(settings_inner, from_=1, to=10, orient="horizontal", length=380,
-          bg=CARD, fg=MUTED, troughcolor=FIELD_BG, highlightthickness=0,
-          relief="flat", font=("Segoe UI", 8), sliderlength=18,
-          activebackground=ACCENT)
+style.configure("Modern.Horizontal.TScale",
+                troughcolor=FIELD_BG,
+                background=ACCENT,
+                sliderrelief="flat",
+                sliderlength=14)
+
+x = ttk.Scale(settings_inner, from_=1, to=10, orient="horizontal",
+              length=380, style="Modern.Horizontal.TScale")
 x.set(10)
 x.pack(fill="x", pady=(6, 0))
 
-Label(settings_inner, text="slow                                              fast",
-      font=("Segoe UI", 8), bg=CARD, fg=MUTED).pack(anchor="w")
+
+speed_labels = Frame(settings_inner, bg=CARD)
+speed_labels.pack(fill="x")
+
+Label(speed_labels, text="slow", font=("Segoe UI", 8),
+      bg=CARD, fg=MUTED).pack(side="left")
+
+Label(speed_labels, text="fast", font=("Segoe UI", 8),
+      bg=CARD, fg=MUTED).pack(side="right")
+
 
 # s is sleep
 # x is speed
