@@ -1,6 +1,7 @@
 # python code for auto typing
 import pyautogui
 import time
+import threading
 from tkinter import *
 from tkinter import ttk
 
@@ -21,7 +22,7 @@ FIELD_BG = "#e3e5ee"
 root = Tk()
 root.title("Auto Type")
 root.geometry("480x620+155+60")
-root.minsize(480, 720)
+root.minsize(480, 800)
 root.config(bg=BG)
 
 style = ttk.Style()
@@ -97,15 +98,48 @@ Label(settings_inner, text="slow                                              fa
 # s is sleep
 # x is speed
 
+stop_event = threading.Event()
+
+
+def do_typing(s, x):
+    try:
+        if s == "":
+            s = 5
+        for _ in range(int(s)):
+            if stop_event.is_set():
+                return
+            time.sleep(1)
+
+        if stop_event.is_set():
+            return
+
+        text = e.get(1.0, END)
+        xx = ((11 - float(x)) / 100)
+
+        CHUNK_SIZE = 8
+        for i in range(0, len(text), CHUNK_SIZE):
+            if stop_event.is_set():
+                return
+            chunk = text[i:i + CHUNK_SIZE]
+            pyautogui.typewrite(chunk, interval=xx)
+    finally:
+        root.after(0, reset_buttons)
+
+
 def typei(s, x):
-    if s == "":
-        s = 5
-    time.sleep(int(s))
+    stop_event.clear()
+    start_typing.config(state="disabled", bg="#b9bfe0", cursor="arrow")
+    cancel_btn.config(state="normal", cursor="hand2")
+    threading.Thread(target=do_typing, args=(s, x), daemon=True).start()
 
-    text = e.get(1.0, END)
-    xx = ((11 - float(x)) / 100)
 
-    pyautogui.typewrite(text, interval=xx)
+def stop_typing(event=None):
+    stop_event.set()
+
+
+def reset_buttons():
+    start_typing.config(state="normal", bg=ACCENT, cursor="hand2")
+    cancel_btn.config(state="disabled", cursor="arrow")
 
 
 def shift_line_to_left(s):
@@ -146,8 +180,21 @@ start_typing = Button(btn_frame, text="Start AutoTyping", activebackground=ACCEN
                        bg=ACCENT, fg="#ffffff", cursor="hand2",
                        pady=10,
                        command=lambda: typei(s.get(), x.get()))
-start_typing.pack(fill="x")
-start_typing.bind("<Enter>", lambda ev: ev.widget.config(bg=ACCENT_HOVER))
-start_typing.bind("<Leave>", lambda ev: ev.widget.config(bg=ACCENT))
+start_typing.pack(fill="x", pady=(0, 10))
+start_typing.bind("<Enter>", lambda ev: ev.widget.config(bg=ACCENT_HOVER) if str(ev.widget['state']) != 'disabled' else None)
+start_typing.bind("<Leave>", lambda ev: ev.widget.config(bg=ACCENT) if str(ev.widget['state']) != 'disabled' else None)
+
+cancel_btn = Button(btn_frame, text="Cancel (Esc)", activebackground="#f4c9c9",
+                     activeforeground="#7a1f1f",
+                     font=("Segoe UI", 11), border=1, relief="solid",
+                     highlightbackground=BORDER,
+                     bg=CARD, fg="#b03a3a", cursor="arrow",
+                     padx=14, pady=8, state="disabled",
+                     command=stop_typing)
+cancel_btn.pack(fill="x")
+cancel_btn.bind("<Enter>", lambda ev: ev.widget.config(bg="#f4dede") if str(ev.widget['state']) != 'disabled' else None)
+cancel_btn.bind("<Leave>", lambda ev: ev.widget.config(bg=CARD) if str(ev.widget['state']) != 'disabled' else None)
+
+root.bind("<Escape>", stop_typing)
 
 root.mainloop()
