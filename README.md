@@ -1,4 +1,8 @@
 # AutoType
 A desktop application for autotyping.
+Set the delay before starting, set the speed, paste the content to be typed, and start.
 
-![Screehshot_of_app](/ss3.png)
+If needed mid typing process can be cancelled.
+
+#
+![Screehshot_of_app](/image.png)
