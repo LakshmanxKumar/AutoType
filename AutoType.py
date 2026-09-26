@@ -1,6 +1,7 @@
 # python code for auto typing
 import pyautogui
 import time
+import random
 import threading
 from tkinter import *
 from tkinter import ttk
@@ -83,7 +84,19 @@ s.insert(0, 5)
 # speed row
 speed_row = Frame(settings_inner, bg=CARD)
 speed_row.pack(fill="x")
-Label(speed_row, text="Typing speed", font=("Segoe UI", 11), bg=CARD, fg=TEXT_COLOR).pack(anchor="w")
+Label(speed_row, text="Typing speed", font=("Segoe UI", 11), bg=CARD, fg=TEXT_COLOR).pack(side="left")
+
+# --- Human like checkbox (kept small, tucked into the speed row so it
+# doesn't add a new row / grow the window) ---
+human_like_var = BooleanVar(value=False)
+human_like_chk = Checkbutton(
+    speed_row, text="Human like", variable=human_like_var,
+    font=("Segoe UI", 8), bg=CARD, fg=MUTED,
+    activebackground=CARD, activeforeground=TEXT_COLOR,
+    selectcolor=FIELD_BG, bd=0, highlightthickness=0,
+    cursor="hand2", padx=0
+)
+human_like_chk.pack(side="right")
 
 style.configure("Modern.Horizontal.TScale",
                 troughcolor=FIELD_BG,
@@ -109,20 +122,29 @@ Label(speed_labels, text="fast", font=("Segoe UI", 8),
 
 # s is sleep
 # x is speed
+# human_like: bool - adds random pauses + backspace/retype "mistakes"
 
 stop_event = threading.Event()
 
 
-def do_typing(s, x):
+def interruptible_sleep(seconds):
+    """Sleep in small steps so Cancel/Esc stays responsive. Returns False if
+    the stop event fired while waiting."""
+    waited = 0.0
+    while waited < seconds:
+        if stop_event.is_set():
+            return False
+        step = min(0.15, seconds - waited)
+        time.sleep(step)
+        waited += step
+    return True
+
+
+def do_typing(s, x, human_like):
     try:
         if s == "":
             s = 5
-        for _ in range(int(s)):
-            if stop_event.is_set():
-                return
-            time.sleep(1)
-
-        if stop_event.is_set():
+        if not interruptible_sleep(int(s)):
             return
 
         text = e.get(1.0, END)
@@ -134,6 +156,29 @@ def do_typing(s, x):
                 return
             chunk = text[i:i + CHUNK_SIZE]
             pyautogui.typewrite(chunk, interval=xx)
+
+            if human_like:
+                # occasionally backspace the tail of what was just typed,
+                # then retype it (simulated "mistake")
+                if chunk.strip() and random.random() < 0.2:
+                    backspace_count = random.randint(1, min(3, len(chunk)))
+                    retyped = chunk[-backspace_count:]
+
+                    if not interruptible_sleep(random.uniform(0.2, 0.6)):
+                        return
+                    for _ in range(backspace_count):
+                        if stop_event.is_set():
+                            return
+                        pyautogui.press('backspace')
+                        time.sleep(random.uniform(0.05, 0.15))
+                    if not interruptible_sleep(random.uniform(0.2, 0.5)):
+                        return
+                    pyautogui.typewrite(retyped, interval=xx)
+
+                # random pause between typing chunks
+                if random.random() < 0.3:
+                    if not interruptible_sleep(random.uniform(1, 10)):
+                        return
     finally:
         root.after(0, reset_buttons)
 
@@ -142,7 +187,11 @@ def typei(s, x):
     stop_event.clear()
     start_typing.config(state="disabled", bg="#b9bfe0", cursor="arrow")
     cancel_btn.config(state="normal", cursor="hand2")
-    threading.Thread(target=do_typing, args=(s, x), daemon=True).start()
+    threading.Thread(
+        target=do_typing,
+        args=(s, x, human_like_var.get()),
+        daemon=True
+    ).start()
 
 
 def stop_typing(event=None):
